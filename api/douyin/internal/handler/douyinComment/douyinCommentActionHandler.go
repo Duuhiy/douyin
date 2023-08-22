@@ -15,53 +15,30 @@ import (
 func DouyinCommentActionHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DouyinCommentActionRequest
-		vars := r.URL.Query()
-		if token, ok := vars["token"]; ok {
-			req.Token = token[0]
-		} else {
-			fmt.Println("token错误")
-			httpx.ErrorCtx(r.Context(), w, errors.New("token错误"))
+		req.Token = r.FormValue("token")
+		videoId, err := strconv.ParseInt(r.FormValue("video_id"), 10, 64)
+		if err != nil {
+			fmt.Println("video_id格式错误", err)
+			httpx.ErrorCtx(r.Context(), w, errors.New("video_id格式错误"))
 		}
-
-		if videoIdStr, ok := vars["video_id"]; ok {
-			videoId, err := strconv.ParseInt(videoIdStr[0], 10, 64)
+		req.Video_id = videoId
+		actionType, err := strconv.ParseInt(r.FormValue("action_type"), 10, 64)
+		if err != nil {
+			fmt.Println("action_type格式错误", err)
+			httpx.ErrorCtx(r.Context(), w, errors.New("action_type格式错误"))
+		}
+		req.Action_type = int32(actionType)
+		req.Comment_text = r.FormValue("comment_text")
+		commentId := r.FormValue("comment_id")
+		if commentId != "" {
+			req.Comment_id, err = strconv.ParseInt(commentId, 10, 64)
 			if err != nil {
-				httpx.ErrorCtx(r.Context(), w, errors.New("video_id格式错误"))
+				fmt.Println("comment_id格式错误", err)
+				httpx.ErrorCtx(r.Context(), w, errors.New("comment_id格式错误"))
 			}
-			req.Video_id = videoId
-		} else {
-			fmt.Println("video_id错误")
-			httpx.ErrorCtx(r.Context(), w, errors.New("video_id错误"))
 		}
 
-		if actionTypeStr, ok := vars["action_type"]; ok {
-			actionType, err := strconv.ParseInt(actionTypeStr[0], 10, 32)
-			if err != nil {
-				httpx.ErrorCtx(r.Context(), w, errors.New("video_id格式错误"))
-			}
-			req.Action_type = int32(actionType)
-		} else {
-			fmt.Println("video_id错误")
-			httpx.ErrorCtx(r.Context(), w, errors.New("video_id错误"))
-		}
-
-		if commentText, ok := vars["comment_text"]; ok {
-			req.Comment_text = commentText[0]
-		} else {
-			fmt.Println("video_id错误")
-			httpx.ErrorCtx(r.Context(), w, errors.New("video_id错误"))
-		}
-
-		if commentIdStr, ok := vars["comment_id"]; ok {
-			commentId, err := strconv.ParseInt(commentIdStr[0], 10, 64)
-			if err != nil {
-				httpx.ErrorCtx(r.Context(), w, errors.New("video_id格式错误"))
-			}
-			req.Video_id = commentId
-		} else {
-			fmt.Println("video_id错误")
-			httpx.ErrorCtx(r.Context(), w, errors.New("video_id错误"))
-		}
+		fmt.Println(req.Token, req.Video_id, req.Action_type, req.Comment_text, req.Comment_id)
 
 		l := douyinComment.NewDouyinCommentActionLogic(r.Context(), svcCtx)
 		resp, err := l.DouyinCommentAction(&req)
