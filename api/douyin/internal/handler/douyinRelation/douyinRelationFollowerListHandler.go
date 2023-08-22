@@ -1,7 +1,9 @@
 package douyinRelation
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"douyin/api/douyin/internal/logic/douyinRelation"
 	"douyin/api/douyin/internal/svc"
@@ -12,10 +14,13 @@ import (
 func DouyinRelationFollowerListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DouyinRelationFollowerListRequest
-		if err := httpx.Parse(r, &req); err != nil {
+		req.Token = r.FormValue("token")
+		userId, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
+		if err != nil {
+			fmt.Println("user_id 格式错误")
 			httpx.ErrorCtx(r.Context(), w, err)
-			return
 		}
+		req.User_id = userId
 
 		l := douyinRelation.NewDouyinRelationFollowerListLogic(r.Context(), svcCtx)
 		resp, err := l.DouyinRelationFollowerList(&req)
