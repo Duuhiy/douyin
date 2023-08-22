@@ -7,6 +7,7 @@ import (
 	"douyin/model/relation"
 	"douyin/rpc/social/internal/JWT"
 	"errors"
+	"fmt"
 
 	"douyin/rpc/social/internal/svc"
 	"douyin/rpc/social/pb"
@@ -30,6 +31,7 @@ func NewDouyinRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (l *DouyinRelationActionLogic) DouyinRelationAction(in *pb.DouyinRelationActionRequest) (*pb.DouyinRelationActionResponse, error) {
 	// todo: add your logic here and delete this line
+	fmt.Println("进入rpc DouyinRelationAction")
 	if err := JWT.JWTAuthToken(l.svcCtx, l.ctx, in.Token); err != nil {
 		return &pb.DouyinRelationActionResponse{
 			StatusCode: 1,
