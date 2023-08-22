@@ -20,5 +20,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:               c,
 		CoreRpcClient:        core.NewCore(zrpc.MustNewClient(c.CoreRpcConf)),
 		InteractiveRpcClient: interactive.NewInteractive(zrpc.MustNewClient(c.InteractiveRpcConf)),
+		SocialRpcClient:      social.NewSocial(zrpc.MustNewClient(c.SocialRpcConf)),
 	}
 }
