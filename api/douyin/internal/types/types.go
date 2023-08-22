@@ -167,6 +167,7 @@ type DouyinRelationFollowListRequest struct {
 type DouyinRelationFollowListResponse struct {
 	Status_code int32  `json:"status_code"` // 状态码，0-成功，其他值-失败
 	Status_msg  string `json:"status_msg"`  // 返回状态描述
+	UserList []User `json:"user_list"`
 }
 
 type DouyinRelationFollowerListRequest struct {
@@ -177,6 +178,7 @@ type DouyinRelationFollowerListRequest struct {
 type DouyinRelationFollowerListResponse struct {
 	Status_code int32  `json:"status_code"` // 状态码，0-成功，其他值-失败
 	Status_msg  string `json:"status_msg"`  // 返回状态描述
+	UserList []User `json:"user_list"`
 }
 
 type DouyinRelationFriendListRequest struct {
@@ -187,6 +189,7 @@ type DouyinRelationFriendListRequest struct {
 type DouyinRelationFriendListResponse struct {
 	Status_code int32  `json:"status_code"` // 状态码，0-成功，其他值-失败
 	Status_msg  string `json:"status_msg"`  // 返回状态描述
+	UserList []User `json:"user_list"`
 }
 
 type DouyinMessageChatRequest struct {
