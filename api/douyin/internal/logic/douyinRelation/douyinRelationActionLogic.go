@@ -2,6 +2,8 @@ package douyinRelation
 
 import (
 	"context"
+	"douyin/rpc/social/pb"
+	"fmt"
 
 	"douyin/api/douyin/internal/svc"
 	"douyin/api/douyin/internal/types"
@@ -25,6 +27,21 @@ func NewDouyinRelationActionLogic(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (l *DouyinRelationActionLogic) DouyinRelationAction(req *types.DouyinRelationActionRequest) (resp *types.DouyinRelationActionResponse, err error) {
 	// todo: add your logic here and delete this line
-
-	return
+	rpcReq := pb.DouyinRelationActionRequest{
+		Token:      req.Token,
+		ToUserId:   req.To_user_id,
+		ActionType: req.Action_type,
+	}
+	fmt.Println("调用 rpc DouyinRelationAction")
+	rpcResp, err := l.svcCtx.SocialRpcClient.DouyinRelationAction(l.ctx, &rpcReq)
+	if err != nil {
+		fmt.Println("rpc 服务 DouyinRelationAction 出错了")
+		return &types.DouyinRelationActionResponse{
+			Status_code: rpcResp.StatusCode,
+			Status_msg:  "rpc 服务 DouyinRelationAction 出错了",
+		}, err
+	}
+	return &types.DouyinRelationActionResponse{
+		Status_code: rpcResp.StatusCode,
+	}, nil
 }
