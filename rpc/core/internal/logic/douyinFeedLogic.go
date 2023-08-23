@@ -31,6 +31,7 @@ func (l *DouyinFeedLogic) DouyinFeed(in *pb.DouyinFeedRequest) (*pb.DouyinFeedRe
 	// todo: add your logic here and delete this line
 	_ = InitVideoList(l.svcCtx, l.ctx)
 	// video 是否 点过赞需要去favorite中查看
+	fmt.Println("token = ", in.Token)
 	if in.Token != "" {
 		claims, _ := JWT.JWTAuth(in.Token)
 		username := claims["Username"].(string)
@@ -40,12 +41,21 @@ func (l *DouyinFeedLogic) DouyinFeed(in *pb.DouyinFeedRequest) (*pb.DouyinFeedRe
 			fmt.Println("查找用户错误")
 		}
 		// 根据u_id和video_id去favorite中查找，若存在则为点赞为true，否则为false
+		// author中的is_follow也需要查表
 		for _, v := range oss.VideoList {
+			// 1.
 			_, err := l.svcCtx.FavoriteModel.FindOneByUserVideo(l.ctx, u.Id, v.Id)
 			if err != nil {
 				v.IsFavorite = false
 			} else {
 				v.IsFavorite = true
+			}
+			// 2.
+			_, err = l.svcCtx.Relationmodel.FindOneByUserToUser(l.ctx, u.Id, v.Author.Id)
+			if err != nil {
+				v.Author.IsFollow = false
+			} else {
+				v.Author.IsFollow = true
 			}
 		}
 	}

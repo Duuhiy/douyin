@@ -26,6 +26,7 @@ type (
 	messageModel interface {
 		Insert(ctx context.Context, data *Message) (sql.Result, error)
 		FindOne(ctx context.Context, id int64) (*Message, error)
+		FindByUserToUser(ctx context.Context, userId int64, toUserId int64) ([]*Message, error)
 		Update(ctx context.Context, data *Message) error
 		Delete(ctx context.Context, id int64) error
 	}
@@ -71,6 +72,20 @@ func (m *defaultMessageModel) FindOne(ctx context.Context, id int64) (*Message, 
 	switch err {
 	case nil:
 		return &resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultMessageModel) FindByUserToUser(ctx context.Context, userId int64, toUserId int64) ([]*Message, error) {
+	query := fmt.Sprintf("select %s from %s where (`to_user_id` = ? and `from_user_id` = ?) or (`to_user_id` = ? and `from_user_id` = ?) order by `create_at`", messageRows, m.table)
+	var resp []*Message
+	err := m.conn.QueryRowsCtx(ctx, &resp, query, userId, toUserId, toUserId, userId)
+	switch err {
+	case nil:
+		return resp, nil
 	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:

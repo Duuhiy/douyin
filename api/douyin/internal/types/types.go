@@ -195,7 +195,7 @@ type DouyinRelationFriendListResponse struct {
 type DouyinMessageChatRequest struct {
 	Token        string `json:"token"`      // 用户鉴权token
 	To_user_id   int64  `json:"to_user_id"`   // 对方用户id
-	Pre_msg_time int64  `json:"preMsgTime"` //上次最新消息的时间（新增字段-apk更新中）
+	Pre_msg_time int64  `json:"pre_msg_time"` //上次最新消息的时间（新增字段-apk更新中）
 }
 
 type DouyinMessageChatResponse struct {
@@ -209,7 +209,7 @@ type Message struct {
 	To_user_id   int64  `json:"to_user_id"`   // 该消息接收者的id
 	From_user_id int64  `json:"from_user_id"` // 该消息发送者的id
 	Content      string `json:"content"`    // 消息内容
-	Create_time  string `json:"create_time"` // 消息创建时间
+	Create_time  int64 `json:"create_time"` // 消息创建时间
 }
 
 type DouyinMessageActionRequest struct {

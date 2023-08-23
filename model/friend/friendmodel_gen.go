@@ -81,7 +81,7 @@ func (m *defaultFriendModel) FindOne(ctx context.Context, id int64) (*Friend, er
 }
 
 func (m *defaultFriendModel) FindByUser(ctx context.Context, userId int64) ([]*Friend, error) {
-	query := fmt.Sprintf("select %s from %s where `user1_id` = ? or `user2_id` = ? limit 1", friendRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `user1_id` = ? or `user2_id` = ?", friendRows, m.table)
 	var resp []*Friend
 	err := m.conn.QueryRowsCtx(ctx, &resp, query, userId, userId)
 	switch err {
