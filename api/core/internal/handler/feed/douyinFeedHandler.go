@@ -1,39 +1,26 @@
 package feed
 
 import (
-	"fmt"
-	"net/http"
-	"strconv"
-	"time"
-
 	"douyin/api/core/internal/logic/feed"
 	"douyin/api/core/internal/svc"
 	"douyin/api/core/internal/types"
+	"fmt"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	"net/http"
+	"strconv"
 )
 
 func DouyinFeedHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DouyinFeedReq
-		fmt.Println("httpx.ParseForm 开始解析请求参数")
-		vars := r.URL.Query()
-		if token, ok := vars["token"]; ok {
-			req.Token = token[0]
-		} else {
-			req.Token = ""
+		req.Token = r.FormValue("token")
+		latestTime, err := strconv.ParseInt(r.FormValue("latest_time"), 10, 64)
+		if err != nil {
+			fmt.Println("latest_time格式错误")
+			httpx.ErrorCtx(r.Context(), w, err)
 		}
-		defaultTime := time.Now().UnixMilli()
-		if latestTimeStr, ok := vars["latest_time"]; ok {
-			latestTime, err := strconv.ParseInt(latestTimeStr[0], 10, 64)
-			if err != nil {
-				httpx.ErrorCtx(r.Context(), w, err)
-			}
-			req.Latest_time = latestTime
-		} else {
-			req.Latest_time = defaultTime
-		}
+		req.Latest_time = latestTime
 
-		fmt.Println("解析完请求参数")
 		l := feed.NewDouyinFeedLogic(r.Context(), svcCtx)
 		resp, err := l.DouyinFeed(&req)
 		if err != nil {
