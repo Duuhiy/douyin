@@ -25,6 +25,7 @@ var (
 type (
 	videoModel interface {
 		Insert(ctx context.Context, data *Video) (sql.Result, error)
+		TransactionInsert(ctx context.Context, session sqlx.Session, data *Video) (sql.Result, error)
 		FindOne(ctx context.Context, id int64) (*Video, error)
 		FindAll(ctx context.Context) ([]*Video, error)
 		FindAllByUser(ctx context.Context, userId int64) ([]*Video, error)
@@ -117,6 +118,13 @@ func (m *defaultVideoModel) FindAllByUser(ctx context.Context, userId int64) ([]
 func (m *defaultVideoModel) Insert(ctx context.Context, data *Video) (sql.Result, error) {
 	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, videoRowsExpectAutoSet)
 	ret, err := m.conn.ExecCtx(ctx, query, data.Author, data.PlayUrl, data.CoverUrl, data.Title, data.IsFavorite, data.FavoriteCount, data.CommentCount, data.DeleteAt)
+	return ret, err
+}
+
+
+func (m *defaultVideoModel) TransactionInsert(ctx context.Context, session sqlx.Session, data *Video) (sql.Result, error) {
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, videoRowsExpectAutoSet)
+	ret, err := session.ExecCtx(ctx, query, data.Author, data.PlayUrl, data.CoverUrl, data.Title, data.IsFavorite, data.FavoriteCount, data.CommentCount, data.DeleteAt)
 	return ret, err
 }
 

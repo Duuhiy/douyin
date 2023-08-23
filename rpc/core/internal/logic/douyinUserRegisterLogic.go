@@ -27,11 +27,11 @@ func NewDouyinUserRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 func (l *DouyinUserRegisterLogic) DouyinUserRegister(in *pb.DouyinUserRegisterRequest) (*pb.DouyinUserRegisterResponse, error) {
 	// todo: add your logic here and delete this line
 	fmt.Println("进入 DouyinUserRegister rpc 服务")
-	user := &user.User{
+	u := &user.User{
 		Name:     in.Username,
 		Password: in.Password,
 	}
-	result, err := l.svcCtx.UserModel.Insert(l.ctx, user)
+	result, err := l.svcCtx.UserModel.Insert(l.ctx, u)
 	if err != nil {
 		return &pb.DouyinUserRegisterResponse{
 			StatusCode: 1,

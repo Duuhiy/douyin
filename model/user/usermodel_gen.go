@@ -28,7 +28,9 @@ type (
 		FindOne(ctx context.Context, id int64) (*User, error)
 		FindOneByToken(ctx context.Context, name string, password string) (*User, error)
 		Update(ctx context.Context, data *User) error
+		TransactionUpdate(ctx context.Context, session sqlx.Session, data *User) error
 		Delete(ctx context.Context, id int64) error
+		TransactCtx(ctx context.Context, fn func(ctx context.Context, session sqlx.Session) error) error
 	}
 
 	defaultUserModel struct {
@@ -115,6 +117,20 @@ func (m *defaultUserModel) Update(ctx context.Context, data *User) error {
 	return err
 }
 
+
+func (m *defaultUserModel) TransactionUpdate(ctx context.Context, session sqlx.Session, data *User) error {
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userRowsWithPlaceHolder)
+	_, err := session.ExecCtx(ctx, query, data.Name, data.Password, data.FollowCount, data.FollowerCount, data.IsFollow, data.Avatar, data.BackgroundImage, data.Signature, data.TotalFavorited, data.WorkCount, data.FavoriteCount, data.DeleteAt, data.Id)
+	return err
+}
+
 func (m *defaultUserModel) tableName() string {
 	return m.table
+}
+
+func (m *defaultUserModel) TransactCtx(ctx context.Context, fn func(ctx context.Context, session sqlx.Session) error) error {
+	//fmt.Println("进入 TransactCtx")
+	return m.conn.TransactCtx(ctx, func(ctx context.Context, session sqlx.Session) error {
+		return fn(ctx, session)
+	})
 }
