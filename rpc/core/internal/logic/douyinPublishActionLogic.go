@@ -10,6 +10,7 @@ import (
 	"douyin/rpc/core/pb"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 type DouyinPublishActionLogic struct {
@@ -61,34 +62,50 @@ func (l *DouyinPublishActionLogic) DouyinPublishAction(in *pb.DouyinPublishActio
 		Title:         in.Title,
 	}
 
-	// 1.将video插入数据库中
-	result, err := l.svcCtx.VideoModel.Insert(l.ctx, insetVideo)
-	id, err := result.LastInsertId()
-	if err != nil {
+	if err := l.svcCtx.UserModel.TransactCtx(l.ctx, func(ctx context.Context, session sqlx.Session) error {
+		fmt.Println("进入 TransactCtx ")
+		// 1.将video插入数据库中
+		result, err := l.svcCtx.VideoModel.TransactionInsert(l.ctx, session, insetVideo)
+		if err != nil {
+			fmt.Println("1.将video插入数据库中出错了", err)
+			return err
+		}
+		// 2.修改user的work_count
+		user.WorkCount++
+		err = l.svcCtx.UserModel.TransactionUpdate(l.ctx, session, user)
+		if err != nil {
+			fmt.Println("更新user的work_count出错", err)
+			return err
+		}
+		// 3.加入到 VideoList 中
+		id, err := result.LastInsertId()
+		if err != nil {
+			fmt.Println("video 查询刚刚插入的视频出错了", err)
+			return err
+		}
+		uploadVideo := pb.Video{
+			Id: int64(len(oss.VideoList)),
+			Author: &pb.User{
+				Id:   id,
+				Name: username,
+			},
+			PlayUrl:       "https://douyin-duu.oss-cn-beijing.aliyuncs.com/" + uploadPath,
+			CoverUrl:      "",
+			Title:         in.Title,
+			FavoriteCount: 0,
+			CommentCount:  0,
+			IsFavorite:    false,
+		}
+		oss.VideoList = append(oss.VideoList, &uploadVideo)
+		//fmt.Println(oss.VideoList)
+		return nil
+	}); err != nil {
 		return &pb.DouyinPublishActionResponse{
 			StatusCode: 1,
-			StatusMsg:  "将video插入数据库中出错了",
+			StatusMsg:  "上传视频失败了",
 		}, err
 	}
-
-	// 2.加入到 VideoList 中
-	uploadVideo := pb.Video{
-		Id: int64(len(oss.VideoList)),
-		Author: &pb.User{
-			Id:   id,
-			Name: username,
-		},
-		PlayUrl:       "https://douyin-duu.oss-cn-beijing.aliyuncs.com/" + uploadPath,
-		CoverUrl:      "",
-		Title:         in.Title,
-		FavoriteCount: 0,
-		CommentCount:  0,
-		IsFavorite:    false,
-	}
-	oss.VideoList = append(oss.VideoList, &uploadVideo)
-	//fmt.Println(oss.VideoList)
-
-	// 3.上传到oss中
+	// 4.上传到oss中
 	//localFileName := "D:\\code\\GoLandProj\\simple-demo-main\\public\\bear.mp4"
 	//err = oss.Bucket.PutObject(uploadPath, bytes.NewReader([]byte("in.Data")))
 	err = oss.Bucket.PutObject(uploadPath, bytes.NewReader(in.Data))
@@ -98,17 +115,6 @@ func (l *DouyinPublishActionLogic) DouyinPublishAction(in *pb.DouyinPublishActio
 			StatusMsg:  "上传到oss中出错了",
 		}, err
 	}
-
-	// 4.修改user的work_count
-	user.WorkCount++
-	err = l.svcCtx.UserModel.Update(l.ctx, user)
-	if err != nil {
-		fmt.Println("更新user的work_count出错")
-		return &pb.DouyinPublishActionResponse{
-			StatusCode: 1,
-		}, err
-	}
-
 	return &pb.DouyinPublishActionResponse{
 		StatusCode: 0,
 		StatusMsg:  "发布成功",

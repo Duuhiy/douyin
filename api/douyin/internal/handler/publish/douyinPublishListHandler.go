@@ -15,23 +15,14 @@ import (
 func DouyinPublishListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DouyinPublishListReq
-		vars := r.URL.Query()
-		if token, ok := vars["token"]; ok {
-			req.Token = token[0]
-		} else {
-			fmt.Println("未输入token")
-			httpx.ErrorCtx(r.Context(), w, errors.New("未输入token"))
+		req.Token = r.FormValue("token")
+		userId, err := strconv.ParseInt(r.FormValue("user_id"), 10, 64)
+		if err != nil {
+			fmt.Println("user_id格式错误")
+			httpx.ErrorCtx(r.Context(), w, errors.New("user_id格式错误"))
 		}
-		if userIdStr, ok := vars["user_id"]; ok {
-			userId, err := strconv.ParseInt(userIdStr[0], 10, 64)
-			if err != nil {
-				httpx.ErrorCtx(r.Context(), w, err)
-			}
-			req.User_id = userId
-		} else {
-			fmt.Println("未输入user_id")
-			httpx.ErrorCtx(r.Context(), w, errors.New("未输入user_id"))
-		}
+		req.User_id = userId
+		fmt.Println("user_id = ", userId)
 
 		l := publish.NewDouyinPublishListLogic(r.Context(), svcCtx)
 		fmt.Println("调用 api 的 DouyinPublishList 返回")
